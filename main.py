@@ -9,8 +9,23 @@ from Programs.Buttons import Button
 from Programs.animation import death_animation
 
 
+class Base:
+    pygame.init()
+    display = pygame.display
+    display.set_caption("ESCAPE THE LAB")
 
-pygame.init()
+
+    sprite_images = ["Images/Sprites/SpriteBasic.png",
+                     "Images/Sprites/Sprite1.png",
+                     "Images/Sprites/Sprite2.png",
+                     "Images/Sprites/Sprite2.png",
+                     "Images/Sprites/Sprite3.png",
+                     "Images/Sprites/Sprite4.png",
+                     "Images/Sprites/Sprite5.png",
+                     "Images/Sprites/Sprite6.png",
+                     "Images/Free_Play_Shop/castle.png"]
+
+
 
 SCREEN_SIZE = pygame.Rect((0, 0, 1280, 736))
 TILE_SIZE = 32
@@ -27,16 +42,25 @@ ENEMY_BULLETS= []
 bullet_x = 0
 bullet_y = 0
 
-def start_menu_window():
-    background = pygame.transform.scale(pygame.image.load("Images/Background_images/menu_background.png"),(1280, 736)).convert_alpha()
-    pygame.display.set_caption("ESCAPE THE LAB")
-    inventory_choice(item=0)
-    map_choice(level=0)
-    global CHARACTER_SKINS
-    CHARACTER_SKINS = "Images/Sprites/SpriteBasic.png"
-    while 1:
+Base.screen = SCREEN
 
-        SCREEN.blit(background, (0, 0))
+from gamestates import States
+States.base = Base
+
+class Menu(Base):
+    background = pygame.transform.scale(pygame.image.load("Images/Background_images/menu_background.gif"),(1280, 736)).convert_alpha()
+
+class Menu_start(Menu):
+
+    def on_select(self):
+        inventory_choice(item=0)
+        map_choice(level=0)
+
+    def draw(self):
+        global CHARACTER_SKINS
+        CHARACTER_SKINS = "Images/Sprites/SpriteBasic.png"
+
+        SCREEN.blit(self.background, (0, 0))
 
         menu_mouse_pos = pygame.mouse.get_pos()
 
@@ -60,16 +84,16 @@ def start_menu_window():
             if EVENT.type == pygame.MOUSEBUTTONDOWN:
                 click()
                 if play_button.checkForInput(menu_mouse_pos):
-                    main_menu_window()
+                    States.select("Menu_main")
 
         pygame.display.update()
 
-def main_menu_window():
-    pygame.display.set_caption("Main Menu")
-    BG = pygame.transform.scale(pygame.image.load("Images/Background_images/background.png"),
-                                (1280, 736)).convert_alpha()
-    while 1:
-        SCREEN.blit(BG, (0, 0))
+class Menu_main(Menu):
+
+    def draw(self):
+        pygame.display.set_caption("Main Menu")
+
+        SCREEN.blit(self.background, (0, 0))
 
         menu_mouse_pos = pygame.mouse.get_pos()
 
@@ -96,22 +120,20 @@ def main_menu_window():
             if EVENT.type == pygame.MOUSEBUTTONDOWN:
                 click()
                 if play_button.checkForInput(menu_mouse_pos):
-                    play_window()
+                    States.select("Menu_play")
                 if controls_button.checkForInput(menu_mouse_pos):
-                    controls_window()
+                    States.select("Menu_controls")
                 if quit_button.checkForInput(menu_mouse_pos):
                     pygame.quit()
                     sys.exit()
 
-        pygame.display.update()
 
 
-def controls_window():
-    pygame.display.set_caption("Controls")
-    BG = pygame.transform.scale(pygame.image.load("Images/Background_images/background.png"),
-                                (1280, 736)).convert_alpha()
-    while True:
-        SCREEN.blit(BG, (0, 0))
+
+class Menu_controls(Menu):
+    def draw(self):
+        pygame.display.set_caption("Controls")
+        SCREEN.blit(self.background, (0, 0))
         credits_mouse_pos = pygame.mouse.get_pos()
         credit_text = get_font(150).render("CONTROLS", True, "#b68f40")
         credit_rect = credit_text.get_rect(center=(640, 100))
@@ -137,17 +159,16 @@ def controls_window():
             if EVENT.type == pygame.MOUSEBUTTONDOWN:
                 click()
                 if back_button.checkForInput(credits_mouse_pos):
-                    main_menu_window()
-
-        pygame.display.update()
+                    States.select("Menu_main")
 
 
-def play_window():
-    pygame.display.set_caption("Game Mode Selection")
-    BG = pygame.transform.scale(pygame.image.load("Images/Background_images/background.png"),
-                                (1280, 736)).convert_alpha()
-    while 1:
-        SCREEN.blit(BG, (0, 0))
+class Menu_play(Menu):
+
+    def draw(self):
+        pygame.display.set_caption("Game Mode Selection")
+
+        SCREEN.blit(self.background, (0, 0))
+
         play_mouse_pos = pygame.mouse.get_pos()
         menu_text = get_font(100).render("GAME MODES", True, "#b68f40")
         menu_rect = menu_text.get_rect(center=(640, 100))
@@ -177,26 +198,22 @@ def play_window():
                 click()
                 if level_play_button.checkForInput(play_mouse_pos):
                     levels_window()
-                if free_play_button.checkForInput(play_mouse_pos):
-                    free_play_window()
-                if shop_button.checkForInput(play_mouse_pos):
+                elif free_play_button.checkForInput(play_mouse_pos):
+                    States.select("Menu_freeplay")
+                elif shop_button.checkForInput(play_mouse_pos):
                     shop_menu_overall()
-                if quit_button.checkForInput(play_mouse_pos):
-                    main_menu_window()
+                elif quit_button.checkForInput(play_mouse_pos):
+                    States.select("Menu_main")
 
 
-        pygame.display.update()
 
+class Menu_freeplay(Menu):
 
-def free_play_window():
-    pygame.display.set_caption("Free Play Menu")
-    BG = pygame.transform.scale(pygame.image.load("Images/Background_images/background.png"),
-                                (1280, 736)).convert_alpha()
+    def draw(self):
+        pygame.display.set_caption("Free Play Menu")
 
-
-    while 1:
         shop_menu_mouse_pos = pygame.mouse.get_pos()
-        SCREEN.blit(BG, (0, 0))
+        SCREEN.blit(self.background, (0, 0))
         menu_text = get_font(80).render("FREE PLAY MENU", True, "#b68f40")
         menu_rect = menu_text.get_rect(center=(640, 100))
 
@@ -235,10 +252,10 @@ def free_play_window():
                     else:
                         not_owned()
                 if quit_button.checkForInput(shop_menu_mouse_pos):
-                    play_window()
+                    States.select("Menu_play")
 
         pygame.image.save(SCREEN, "Images/screenshot_load_screen.jpg")
-        pygame.display.update()
+
 
 
 def levels_window():
@@ -1001,18 +1018,10 @@ def character_selected():
 
 
 def inventory_choice(item):
-    sprite_images = ["Images/Sprites/SpriteBasic.png",
-                     "Images/Sprites/Sprite1.png",
-                     "Images/Sprites/Sprite2.png",
-                     "Images/Sprites/Sprite2.png",
-                     "Images/Sprites/Sprite3.png",
-                     "Images/Sprites/Sprite4.png",
-                     "Images/Sprites/Sprite5.png",
-                     "Images/Sprites/Sprite6.png",
-                     "Images/Free_Play_Shop/castle.png"]
-
     global INVENTORY_ITEMS
-    INVENTORY_ITEMS.append((sprite_images[item]))
+
+
+    INVENTORY_ITEMS.append((base.sprite_images[item]))
 
 
 def not_owned():
@@ -2106,14 +2115,14 @@ class PlatNext(Entity):
 
 
 def level_music(level):
-    music = ["Music/madirfan-hidden-place-extended-version-13891.mp3",
-             "Music/this-minimal-technology-pure-12327.mp3",
-             "Music/slow-trap-18565.mp3",
+    music = ["Music/madirfan-hidden-place-extended-version-13891.ogg",
+             "Music/this-minimal-technology-pure-12327.ogg",
+             "Music/slow-trap-18565.ogg",
              "Music/bensound-summer_ogg_music.ogg",
-             "Music/tropical-house-112360.mp3",
-             "Music/sport-fashion-rock-95426.mp3",
-             "Music/sport-fashion-rock-95426.mp3",
-             "Music/sport-fashion-rock-95426.mp3 "]
+             "Music/tropical-house-112360.ogg",
+             "Music/sport-fashion-rock-95426.ogg",
+             "Music/sport-fashion-rock-95426.ogg",
+             "Music/sport-fashion-rock-95426.ogg "]
     pygame.mixer.pre_init()
     pygame.mixer.init()
     pygame.mixer.Channel(0).set_volume(0.3)
@@ -2122,14 +2131,14 @@ def level_music(level):
 
 
 def free_play_music():
-    music = ["Music/madirfan-hidden-place-extended-version-13891.mp3",
-             "Music/this-minimal-technology-pure-12327.mp3",
-             "Music/slow-trap-18565.mp3",
+    music = ["Music/madirfan-hidden-place-extended-version-13891.ogg",
+             "Music/this-minimal-technology-pure-12327.ogg",
+             "Music/slow-trap-18565.ogg",
              "Music/bensound-summer_ogg_music.ogg",
-             "Music/tropical-house-112360.mp3",
-             "Music/sport-fashion-rock-95426.mp3",
-             "Music/sport-fashion-rock-95426.mp3",
-             "Music/sport-fashion-rock-95426.mp3 "]
+             "Music/tropical-house-112360.ogg",
+             "Music/sport-fashion-rock-95426.ogg",
+             "Music/sport-fashion-rock-95426.ogg",
+             "Music/sport-fashion-rock-95426.ogg "]
     music_number = randint(1, 7)
     pygame.mixer.pre_init()
     pygame.mixer.init()
@@ -2139,20 +2148,20 @@ def free_play_music():
 
 
 def music_effect(sound_effect):
-    music = ["Music/gta-v-death-sound-effect-102.mp3"]
+    music = ["Music/gta-v-death-sound-effect-102.ogg"]
     pygame.mixer.pre_init()
     pygame.mixer.init()
     pygame.mixer.Channel(0).set_volume(1)
     pygame.mixer.Channel(0).play(pygame.mixer.Sound(music[sound_effect-1]))
 
 def jump_effect():
-    music = ["Music/jump.mp3"]
+    music = ["Music/jump.ogg"]
     pygame.mixer.pre_init()
     pygame.mixer.init()
     pygame.mixer.Channel(1).play(pygame.mixer.Sound(music[0]), maxtime=300)
 
 def click():
-    music = ["Music/click.mp3"]
+    music = ["Music/click.ogg"]
     pygame.mixer.pre_init()
     pygame.mixer.init()
     pygame.mixer.Channel(1).play(pygame.mixer.Sound(music[0]), maxtime=250)
@@ -2163,5 +2172,18 @@ def shoot_sound():
     pygame.mixer.init()
     pygame.mixer.Channel(3).play(pygame.mixer.Sound(music[0]), maxtime=1000)
 
-while 1:
-    start_menu_window()
+async def main():
+    while States.draw():
+        pygame.display.update()
+        await asyncio.sleep(0)
+
+    pygame.quit()
+    sys.exit(0)
+
+
+States.select("Menu_start")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
